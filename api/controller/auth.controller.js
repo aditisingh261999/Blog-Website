@@ -1,12 +1,18 @@
 import User from "../Models/user.model.js";
 import bcryptjs from "bcryptjs";
+import { errorHandler } from "../utils/errorHandler.js";
 
-export const signup = async (req, res) => {
+export const signup = async (req, res, next) => {
   const { username, email, password } = req.body;
-  if (!username || !email || !password) {
-    return res.status(400).json({
-      message: "Please provide all fields",
-    });
+  if (
+    !username ||
+    !email ||
+    !password ||
+    username === "" ||
+    email === "" ||
+    password === ""
+  ) {
+    next(errorHandler(400, "All fields are required"));
   }
 
   // hash password
@@ -23,10 +29,6 @@ export const signup = async (req, res) => {
     const user = await newUser.save();
     res.json(user);
   } catch (error) {
-    if (error.code === 11000) {
-      // Duplicate key error (e.g., duplicate email)
-      return res.status(400).json({ message: "Email already exists" });
-    }
-    res.status(500).json({ message: "Internal Server Error" });
+    next(error);
   }
 };
