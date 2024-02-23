@@ -67,3 +67,71 @@ export const signin = async (req, res, next) => {
     next(error);
   }
 };
+
+export const google = async (req, res, next) => {
+  const { email, name, googlePhotoUrl } = req.body;
+  if (
+    !email ||
+    !name ||
+    !googlePhotoUrl ||
+    email === "" ||
+    name === "" ||
+    googlePhotoUrl === ""
+  ) {
+    next(errorHandler(400, "All fields are required"));
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET_KEY, {
+        expiresIn: 3600,
+      });
+      // we dont want to show the pasword
+      const { password, ...rest } = user._doc;
+
+      res
+        .status(200)
+        .cookie("access_token", token, {
+          expires: new Date(Date.now() + 3600000),
+          httpOnly: true,
+        })
+        .json(rest);
+    } else {
+      /**
+       * since we need password also according to our model,
+       * so we need to generate a random password which user can change later
+       */
+      const generatedPassword =
+        Math.random().toString(36).slice(-8) +
+        Math.random().toString(36).slice(-8);
+
+      const salt = await bcryptjs.genSalt(10);
+      const hashedPassword = await bcryptjs.hash(generatedPassword, salt);
+      const newUser = new User({
+        username:
+          name.toLowerCase().split(" ").join("") +
+          Math.random().toString(9).slice(-4),
+        email,
+        password: hashedPassword,
+        profilePhoto: googlePhotoUrl,
+      });
+      await newUser.save();
+      const token = jwt.sign({ _id: newUser._id }, process.env.JWT_SECRET_KEY, {
+        expiresIn: 3600,
+      });
+      // we dont want to show the pasword
+      const { password, ...rest } = newUser._doc;
+
+      res
+        .status(200)
+        .cookie("access_token", token, {
+          expires: new Date(Date.now() + 3600000),
+          httpOnly: true,
+        })
+        .json(rest);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
