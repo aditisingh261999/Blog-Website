@@ -8,20 +8,23 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Headers from "./components/Headers";
 import Footer from "./components/Footer";
+import PrivateRoute from "./components/PrivateRoute";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Headers />
       <div>
-        {" "}
         {/* Wrap Routes and Footer inside a parent element */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* Use Route to wrap PrivateRoute */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Route>
           <Route path="/projects" element={<Projects />} />
         </Routes>
         <Footer />
