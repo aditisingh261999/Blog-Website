@@ -123,6 +123,7 @@ export const google = async (req, res, next) => {
       // we dont want to show the pasword
       const { password, ...rest } = newUser._doc;
 
+      
       res
         .status(200)
         .cookie("access_token", token, {
